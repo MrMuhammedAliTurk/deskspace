@@ -1,10 +1,16 @@
 import express from 'express';
 import cors from 'cors';
+import { existsSync } from 'node:fs';
+import { dirname, resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { createId, ensureDatabase, readDatabase, writeDatabase } from './store.js';
 import { hasTimeConflict, validateReservation, validateRoom } from './domain.js';
 
 const app = express();
 const PORT = Number(process.env.PORT) || 3000;
+const PROJECT_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
+const DIST_DIR = resolve(PROJECT_ROOT, 'dist');
+const INDEX_FILE = resolve(DIST_DIR, 'index.html');
 app.use(cors());
 app.use(express.json({ limit: '1mb' }));
 
@@ -140,10 +146,42 @@ app.delete('/api/reservations/:id', async (req, res, next) => {
   } catch (error) { return next(error); }
 });
 
+// Build edilmiş React uygulamasını aynı Express sunucusundan yayınla.
+// Geliştirme ortamında frontend Vite (5173), API ise Express (3000) üzerinden çalışır.
+if (existsSync(INDEX_FILE)) {
+  app.use(express.static(DIST_DIR, { index: false }));
+}
+
+// Bilinmeyen API adresleri SPA fallback'e düşmesin; JSON 404 dönsün.
+app.use('/api', (_req, res) => {
+  res.status(404).json({ error: 'API uç noktası bulunamadı.' });
+});
+
+// React Router ileride eklense de istemci tarafı yollar index.html ile açılabilsin.
+app.use((req, res, next) => {
+  if (req.method !== 'GET') return next();
+  if (req.path.startsWith('/api/')) return next();
+
+  if (!existsSync(INDEX_FILE)) {
+    return res.status(404).send('DeskSpace arayüzü bulunamadı. Önce npm run build komutunu çalıştırın.');
+  }
+
+  return res.sendFile(INDEX_FILE, (error) => {
+    if (error) next(error);
+  });
+});
+
 app.use((error, _req, res, _next) => {
   console.error(error);
   res.status(500).json({ error: 'Sunucuda beklenmeyen bir hata oluştu.' });
 });
 
 await ensureDatabase();
-app.listen(PORT, () => console.log(`DeskSpace API çalışıyor: http://localhost:${PORT}`));
+app.listen(PORT, '0.0.0.0', () => {
+  console.log(`DeskSpace sunucusu ${PORT} portunda çalışıyor.`);
+  if (existsSync(INDEX_FILE)) {
+    console.log('Web arayüzü Express üzerinden yayınlanıyor.');
+  } else {
+    console.log('Geliştirme modu: Web arayüzü Vite üzerinden yayınlanmalıdır.');
+  }
+});

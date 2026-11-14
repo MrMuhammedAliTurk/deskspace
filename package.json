@@ -10,7 +10,8 @@
     "build": "tsc --noEmit && vite build",
     "preview": "vite preview",
     "test": "node --test server/tests/reservations.test.js",
-    "start:server": "node server/index.js"
+    "start:server": "node server/index.js",
+    "start": "node server/index.js"
   },
   "dependencies": {
     "concurrently": "^9.2.1",

@@ -18,7 +18,7 @@ DeskSpace; toplantı odalarını, çalışma alanlarını ve rezervasyonları te
 
 ## Gereksinimler
 
-- Node.js 20 veya üzeri (Node.js 22 önerilir)
+- Node.js 20.19+ veya 22.12+ (Node.js 22 önerilir)
 - npm
 
 ## Windows / PowerShell ile çalıştırma
@@ -47,6 +47,25 @@ DeskSpace; toplantı odalarını, çalışma alanlarını ve rezervasyonları te
 İlk açılışta demo odalar ve örnek rezervasyonlar oluşturulur. İlk çalıştırmada `server/data/db.json` dosyası otomatik oluşturulur. Bu dosya uygulama verilerini içerir; sıfırdan demo verisi oluşturmak için uygulamayı durdurup bu dosyayı silebilirsiniz.
 
 API durum kontrolü: `http://localhost:3000/api/health`
+
+## Tek servis olarak yayınlama (Render)
+
+DeskSpace, üretim derlemesinden sonra frontend ve backend'i **tek bir Express sunucusu** üzerinden çalıştırabilecek şekilde yapılandırılmıştır. Böylece Netlify + ayrı API servisi kurmak zorunda kalmadan tek bir Render Web Service kullanabilirsiniz.
+
+Render'da GitHub deposunu bağlayıp aşağıdaki ayarları girin:
+
+| Ayar | Değer |
+|---|---|
+| Environment | Node |
+| Build Command | `npm ci && npm run build` |
+| Start Command | `npm start` |
+| Node Version | `22` (projedeki `.node-version` dosyası) |
+
+Yayınlandıktan sonra web arayüzü kök adreste (`https://...onrender.com`), API ise aynı alan adındaki `/api` yollarında çalışır. Frontend'in API istekleri göreli `/api` adreslerini kullandığı için ayrıca bir API URL'si tanımlamak gerekmez.
+
+### Yayınlama öncesi veri saklama uyarısı
+
+Bu sürüm demo verilerini `server/data/db.json` dosyasında saklar. Render'ın varsayılan web servis dosya sistemi kalıcı veri deposu değildir; servis yeniden dağıtıldığında veya yeniden başladığında bu dosyaya yazılan kullanıcı verileri kaybolabilir. Kalıcı kullanım için PostgreSQL'e geçilmesi önerilir. Alternatif olarak Render servisine kalıcı disk bağlanırsa `DESKSPACE_DATA_FILE` ortam değişkeni disk üzerindeki dosya yoluna ayarlanabilir. JSON dosyası tabanlı mevcut depo eşzamanlı çok kullanıcılı üretim kullanımı için tasarlanmamıştır.
 
 ## Testler
 

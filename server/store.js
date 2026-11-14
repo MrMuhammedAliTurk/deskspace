@@ -1,8 +1,11 @@
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { dirname, resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { randomUUID } from 'node:crypto';
 
-const filePath = resolve('server/data/db.json');
+const PROJECT_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
+// Render gibi ortamlarda kalıcı disk bağlanırsa DESKSPACE_DATA_FILE ile dosya konumu verilebilir.
+const filePath = resolve(process.env.DESKSPACE_DATA_FILE || resolve(PROJECT_ROOT, 'server/data/db.json'));
 const roomSeeds = [
   { id: 'room-aurora', name: 'Aurora', building: 'Merkez Ofis', floor: 3, capacity: 8, type: 'Toplantı odası', equipment: ['Ekran', 'Video konferans', 'Beyaz tahta'], color: 'violet' },
   { id: 'room-atlas', name: 'Atlas', building: 'Merkez Ofis', floor: 2, capacity: 6, type: 'Toplantı odası', equipment: ['Ekran', 'Beyaz tahta'], color: 'blue' },
